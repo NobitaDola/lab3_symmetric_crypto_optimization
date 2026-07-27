@@ -1,0 +1,168 @@
+% 依据 D:/桌面/模板/main.tex 提炼的版式覆盖层
+\RequirePackage{booktabs}
+\RequirePackage{colortbl}
+\RequirePackage{caption}
+\RequirePackage{xurl}
+\RequirePackage{hyperref}
+\RequirePackage{bookmark}
+\RequirePackage{needspace}
+\RequirePackage{etoolbox}
+\RequirePackage{amsmath}
+\RequirePackage{placeins}
+\RequirePackage[most]{tcolorbox}
+
+\geometry{
+  a4paper,
+  top=2.55cm,
+  bottom=2.45cm,
+  left=2.60cm,
+  right=2.40cm,
+  headheight=22.5pt,
+  headsep=0.65cm,
+  footskip=1.05cm
+}
+\graphicspath{{images/}}
+
+\definecolor{SDUred}{cmyk}{0.26,1,1,0.28}
+\definecolor{SDUdark}{RGB}{70,70,70}
+\definecolor{SDUlight}{RGB}{247,243,243}
+\definecolor{rulegray}{RGB}{205,205,205}
+\definecolor{codebg}{RGB}{249,247,247}
+
+\hypersetup{
+  unicode=true,
+  hypertexnames=false,
+  colorlinks=true,
+  linkcolor=SDUred,
+  urlcolor=SDUred,
+  citecolor=SDUred,
+  pdfauthor={课程作业 3},
+  pdftitle={对称密码算法的软件实现},
+  pdfsubject={对称密码算法软件优化实验报告}
+}
+\urlstyle{same}
+\Urlmuskip=0mu plus 1mu
+
+\setcounter{secnumdepth}{3}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\thesubsection}{\thesection.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+\setcounter{tocdepth}{2}
+\renewcommand{\contentsname}{目\quad 录}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.08em}
+\renewcommand{\normalsize}{\fontsize{12pt}{14.5pt}\selectfont}
+\linespread{1.34}
+\setlist[itemize]{leftmargin=2.2em,itemsep=0.18em,topsep=0.38em,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{leftmargin=2.4em,itemsep=0.18em,topsep=0.38em,parsep=0pt,partopsep=0pt}
+\setlength{\emergencystretch}{1.5em}
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+\brokenpenalty=8000
+\raggedbottom
+
+\titleformat{\section}[block]
+  {\heiti\zihao{3}\color{SDUred}}
+  {\raisebox{0.05em}{\rule{3.5pt}{1.05em}}\hspace{0.65em}\thesection}
+  {0.65em}{}
+  [\vspace{0.15em}\color{rulegray}\titlerule]
+\titleformat{name=\section,numberless}[block]
+  {\heiti\zihao{3}\color{SDUred}}
+  {}{0pt}
+  {\raisebox{0.05em}{\rule{3.5pt}{1.05em}}\hspace{0.65em}}
+  [\vspace{0.15em}\color{rulegray}\titlerule]
+\titlespacing*{\section}{0pt}{1.65em}{0.88em}
+
+\titleformat{\subsection}[block]
+  {\heiti\zihao{4}\color{SDUdark}}
+  {\thesubsection}{0.75em}{}
+\titlespacing*{\subsection}{0pt}{1.20em}{0.55em}
+
+\titleformat{\subsubsection}[block]
+  {\heiti\zihao{-4}\color{black}}
+  {\thesubsubsection}{0.75em}{}
+\titlespacing*{\subsubsection}{0pt}{0.95em}{0.38em}
+
+\titleformat{\paragraph}[runin]
+  {\heiti\zihao{-4}\color{SDUred}}
+  {}{0pt}{}
+\titlespacing*{\paragraph}{0pt}{0.8em}{1em}
+
+\pretocmd{\section}{\Needspace{5\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace{4\baselineskip}}{}{}
+\pretocmd{\subsubsection}{\Needspace{3\baselineskip}}{}{}
+
+\makeatletter
+\renewcommand{\headrule}{\hbox to\headwidth{\color{SDUred!65}\leaders\hrule height \headrulewidth\hfill}}
+\makeatother
+\fancypagestyle{reportstyle}{
+  \fancyhf{}
+  \fancyhead[L]{\zihao{-5}\color{SDUdark}对称密码算法实验报告}
+  \fancyhead[R]{\zihao{-5}\color{SDUdark}山东大学网络空间安全学院}
+  \fancyfoot[C]{\zihao{-5}\color{SDUdark}\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyhead[L]{\zihao{-5}\color{SDUdark}对称密码算法实验报告}
+  \fancyhead[R]{\zihao{-5}\color{SDUdark}山东大学网络空间安全学院}
+  \fancyfoot[C]{\zihao{-5}\color{SDUdark}\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+\AtBeginDocument{\pagestyle{reportstyle}}
+
+\setlength{\LTpre}{0.8em}
+\setlength{\LTpost}{0.8em}
+\setlength{\tabcolsep}{3.3pt}
+\renewcommand{\arraystretch}{1.40}
+\arrayrulecolor{SDUred!35}
+\captionsetup{
+  font=small,
+  labelfont={bf,color=SDUred},
+  textfont={color=SDUdark},
+  labelsep=quad,
+  justification=centering,
+  skip=5pt
+}
+\AtBeginEnvironment{longtable}{\small}
+\setlength{\intextsep}{0.75em plus 0.15em minus 0.1em}
+\setlength{\textfloatsep}{0.9em plus 0.2em minus 0.15em}
+\setlength{\floatsep}{0.75em plus 0.15em minus 0.1em}
+
+\lstdefinestyle{template-code}{
+  basicstyle=\ttfamily\zihao{-5},
+  columns=fullflexible,
+  breaklines=true,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  framerule=0.45pt,
+  framesep=5pt,
+  rulecolor=\color{SDUred!35},
+  backgroundcolor=\color{codebg},
+  xleftmargin=0.4em,
+  xrightmargin=0.4em,
+  aboveskip=0.62em,
+  belowskip=0.78em
+}
+\lstset{style=template-code}
+\lstdefinestyle{c-modern}{style=template-code,language=C}
+
+\newtcolorbox{reportnote}[1]{
+  enhanced,
+  breakable,
+  colback=SDUlight,
+  colframe=SDUred!55,
+  boxrule=0.45pt,
+  arc=1pt,
+  left=7pt,right=7pt,top=6pt,bottom=6pt,
+  title={#1},
+  coltitle=SDUred,
+  fonttitle=\heiti\bfseries
+}
+
+\newcommand{\CoverLabel}[1]{\makebox[5em][s]{\songti #1}}
+\newcommand{\CoverFill}[1]{\underline{\makebox[11.0cm][c]{\songti\strut #1}}}
