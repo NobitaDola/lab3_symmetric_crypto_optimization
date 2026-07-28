@@ -56,6 +56,27 @@ int main()
         return -1;
     }
 
+    // 非整块数据单元：验证 IEEE 1619 ciphertext stealing 与解密。
+    const size_t partial_len = 31;
+    uint8_t partial_ref[31], partial_basic[31], partial_opt[31], recovered[31];
+    ctx = EVP_CIPHER_CTX_new();
+    EVP_EncryptInit_ex(ctx, EVP_aes_128_xts(), NULL, key, iv);
+    EVP_EncryptUpdate(ctx, partial_ref, &len, in, (int)partial_len);
+    EVP_EncryptFinal_ex(ctx, partial_ref + len, &len);
+    EVP_CIPHER_CTX_free(ctx);
+    if (!aes128_xts_encrypt_basic(in, partial_basic, partial_len, key, iv) ||
+        !aes128_xts_encrypt_opt(in, partial_opt, partial_len, key, iv) ||
+        memcmp(partial_ref, partial_basic, partial_len) != 0 ||
+        memcmp(partial_ref, partial_opt, partial_len) != 0 ||
+        !aes128_xts_decrypt_basic(partial_basic, recovered, partial_len, key, iv) ||
+        memcmp(recovered, in, partial_len) != 0 ||
+        !aes128_xts_decrypt_opt(partial_opt, recovered, partial_len, key, iv) ||
+        memcmp(recovered, in, partial_len) != 0)
+    {
+        printf("[ERROR] AES-128 XTS ciphertext stealing/decryption failed!\n");
+        return -1;
+    }
+
     // 4. 性能评估
     uint64_t start = start_rdtsc();
     for (int i = 0; i < TEST_LOOPS; i++)

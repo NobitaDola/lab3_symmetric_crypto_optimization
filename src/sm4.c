@@ -125,6 +125,14 @@ void sm4_encrypt_basic(const uint8_t *in, uint8_t *out, const uint32_t *rk)
     store_u32_be(out + 12, x[32]);
 }
 
+void sm4_decrypt_basic(const uint8_t *in, uint8_t *out, const uint32_t *rk)
+{
+    uint32_t reversed[32];
+    for (unsigned i = 0; i < 32; ++i)
+        reversed[i] = rk[31U - i];
+    sm4_encrypt_basic(in, out, reversed);
+}
+
 // ---------------------------------------------------------------------------
 // 3. T-Table 优化实现 (32位T表 + 4路循环展开)
 // ---------------------------------------------------------------------------
@@ -172,6 +180,41 @@ void sm4_encrypt_ttable(const uint8_t *in, uint8_t *out, const uint32_t *rk)
     store_u32_be(out + 4, x2);
     store_u32_be(out + 8, x1);
     store_u32_be(out + 12, x0);
+}
+
+void sm4_encrypt4_ttable(const uint8_t in[64], uint8_t out[64], const uint32_t *rk)
+{
+    uint32_t x0[4], x1[4], x2[4], x3[4];
+    for (unsigned b = 0; b < 4; ++b) {
+        x0[b] = load_u32_be(in + 16U * b);
+        x1[b] = load_u32_be(in + 16U * b + 4);
+        x2[b] = load_u32_be(in + 16U * b + 8);
+        x3[b] = load_u32_be(in + 16U * b + 12);
+    }
+    for (unsigned round = 0; round < 32; round += 4) {
+        for (unsigned b = 0; b < 4; ++b) {
+            uint32_t t = x1[b] ^ x2[b] ^ x3[b] ^ rk[round];
+            x0[b] ^= T0[t >> 24] ^ T1[(t >> 16) & 255] ^ T2[(t >> 8) & 255] ^ T3[t & 255];
+        }
+        for (unsigned b = 0; b < 4; ++b) {
+            uint32_t t = x2[b] ^ x3[b] ^ x0[b] ^ rk[round + 1];
+            x1[b] ^= T0[t >> 24] ^ T1[(t >> 16) & 255] ^ T2[(t >> 8) & 255] ^ T3[t & 255];
+        }
+        for (unsigned b = 0; b < 4; ++b) {
+            uint32_t t = x3[b] ^ x0[b] ^ x1[b] ^ rk[round + 2];
+            x2[b] ^= T0[t >> 24] ^ T1[(t >> 16) & 255] ^ T2[(t >> 8) & 255] ^ T3[t & 255];
+        }
+        for (unsigned b = 0; b < 4; ++b) {
+            uint32_t t = x0[b] ^ x1[b] ^ x2[b] ^ rk[round + 3];
+            x3[b] ^= T0[t >> 24] ^ T1[(t >> 16) & 255] ^ T2[(t >> 8) & 255] ^ T3[t & 255];
+        }
+    }
+    for (unsigned b = 0; b < 4; ++b) {
+        store_u32_be(out + 16U * b, x3[b]);
+        store_u32_be(out + 16U * b + 4, x2[b]);
+        store_u32_be(out + 16U * b + 8, x1[b]);
+        store_u32_be(out + 16U * b + 12, x0[b]);
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,50 @@
+=== benchmark run 1 / 5 ===
+AES T-table             2031.39 ->     158.28 cycles/block speedup   12.83x
+AES AES-NI              2031.39 ->       5.72 cycles/block speedup  355.41x
+SM4 T-table              552.94 ->     306.50 cycles/block speedup    1.80x
+GIFT-128 bitslice      36242.12 ->    1224.95 cycles/block speedup   29.59x
+TWINE 8-way             2696.09 ->      92.60 cycles/block speedup   29.11x
+AES-CTR                  140.14 ->       1.39 cycles/byte  speedup  101.18x
+SM4-CTR                   31.47 ->      11.44 cycles/byte  speedup    2.75x
+AES-GCM                  296.83 ->       6.12 cycles/byte  speedup   48.50x
+AES-XTS                  135.65 ->       0.44 cycles/byte  speedup  307.76x
+=== benchmark run 2 / 5 ===
+AES T-table             2040.91 ->     219.85 cycles/block speedup    9.28x
+AES AES-NI              2040.91 ->       5.65 cycles/block speedup  360.92x
+SM4 T-table              418.05 ->     278.06 cycles/block speedup    1.50x
+GIFT-128 bitslice      33484.53 ->    1205.42 cycles/block speedup   27.78x
+TWINE 8-way             2635.08 ->      92.69 cycles/block speedup   28.43x
+AES-CTR                  133.03 ->       1.29 cycles/byte  speedup  103.11x
+SM4-CTR                   30.00 ->      10.85 cycles/byte  speedup    2.76x
+AES-GCM                  289.91 ->       6.17 cycles/byte  speedup   46.96x
+AES-XTS                  133.98 ->       0.45 cycles/byte  speedup  299.03x
+=== benchmark run 3 / 5 ===
+AES T-table             2009.34 ->     142.81 cycles/block speedup   14.07x
+AES AES-NI              2009.34 ->       5.57 cycles/block speedup  360.54x
+SM4 T-table              416.62 ->     278.76 cycles/block speedup    1.49x
+GIFT-128 bitslice      34530.01 ->    1202.66 cycles/block speedup   28.71x
+TWINE 8-way             2653.65 ->      91.63 cycles/block speedup   28.96x
+AES-CTR                  134.30 ->       1.31 cycles/byte  speedup  102.79x
+SM4-CTR                   30.02 ->      10.77 cycles/byte  speedup    2.79x
+AES-GCM                  294.57 ->       6.20 cycles/byte  speedup   47.50x
+AES-XTS                  136.11 ->       0.44 cycles/byte  speedup  308.38x
+=== benchmark run 4 / 5 ===
+AES T-table             1977.78 ->     141.18 cycles/block speedup   14.01x
+AES AES-NI              1977.78 ->       5.60 cycles/block speedup  353.10x
+SM4 T-table              438.32 ->     284.86 cycles/block speedup    1.54x
+GIFT-128 bitslice      33891.75 ->    1260.41 cycles/block speedup   26.89x
+TWINE 8-way             2693.64 ->      92.13 cycles/block speedup   29.24x
+AES-CTR                  132.25 ->       1.30 cycles/byte  speedup  101.56x
+SM4-CTR                   29.60 ->      10.69 cycles/byte  speedup    2.77x
+AES-GCM                  312.81 ->       6.23 cycles/byte  speedup   50.18x
+AES-XTS                  136.17 ->       0.46 cycles/byte  speedup  294.69x
+=== benchmark run 5 / 5 ===
+AES T-table             2032.39 ->     144.26 cycles/block speedup   14.09x
+AES AES-NI              2032.39 ->       5.66 cycles/block speedup  358.98x
+SM4 T-table              428.69 ->     278.29 cycles/block speedup    1.54x
+GIFT-128 bitslice      34415.62 ->    1176.23 cycles/block speedup   29.26x
+TWINE 8-way             2617.64 ->      91.01 cycles/block speedup   28.76x
+AES-CTR                  138.42 ->       1.30 cycles/byte  speedup  106.76x
+SM4-CTR                   29.62 ->      10.80 cycles/byte  speedup    2.74x
+AES-GCM                  292.75 ->       6.23 cycles/byte  speedup   46.98x
+AES-XTS                  138.09 ->       0.45 cycles/byte  speedup  309.45x

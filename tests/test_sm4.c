@@ -30,7 +30,7 @@ int main()
     uint8_t in[16] = {
         0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef,
         0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10};
-    uint8_t out_basic[16], out_ttable[16], out_shuffle[16], out_openssl[16];
+    uint8_t out_basic[16], out_ttable[16], out_shuffle[16], out_openssl[16], recovered[16];
 
     // 初始化 T-Table 查找表
     sm4_init_ttables();
@@ -52,6 +52,7 @@ int main()
     sm4_encrypt_basic(in, out_basic, rk);
     sm4_encrypt_ttable(in, out_ttable, rk);
     sm4_encrypt_shuffle(in, out_shuffle, rk);
+    sm4_decrypt_basic(out_basic, recovered, rk);
 
     // 打印加密结果方便排错
     print_hex("OpenSSL Standard", out_openssl, 16);
@@ -63,7 +64,7 @@ int main()
     // 正确性断言
     if (memcmp(out_openssl, out_basic, 16) == 0 &&
         memcmp(out_openssl, out_ttable, 16) == 0 &&
-        memcmp(out_openssl, out_shuffle, 16) == 0)
+        memcmp(out_openssl, out_shuffle, 16) == 0 && memcmp(recovered, in, 16) == 0)
     {
         printf("[SUCCESS] All 3 implementations matched OpenSSL output perfectly!\n\n");
     }

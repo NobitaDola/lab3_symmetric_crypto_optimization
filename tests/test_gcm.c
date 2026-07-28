@@ -35,6 +35,7 @@ int main()
     uint8_t *out_opt = malloc(TEST_DATA_SIZE);
 
     uint8_t tag_openssl[16], tag_basic[16], tag_opt[16];
+    uint8_t *recovered = malloc(TEST_DATA_SIZE);
 
     for (size_t i = 0; i < TEST_DATA_SIZE; i++)
         in[i] = (uint8_t)(i & 0xFF);
@@ -93,6 +94,25 @@ int main()
         return -1;
     }
 
+    if (!aes128_gcm_decrypt_basic(out_basic, TEST_DATA_SIZE, aad, AAD_SIZE,
+                                  key, iv, tag_basic, recovered) ||
+        memcmp(recovered, in, TEST_DATA_SIZE) != 0 ||
+        !aes128_gcm_decrypt_opt(out_opt, TEST_DATA_SIZE, aad, AAD_SIZE,
+                                key, iv, tag_opt, recovered) ||
+        memcmp(recovered, in, TEST_DATA_SIZE) != 0)
+    {
+        printf("[ERROR] AES-128 GCM authenticated decryption failed!\n");
+        return -1;
+    }
+    tag_opt[0] ^= 1;
+    if (aes128_gcm_decrypt_opt(out_opt, TEST_DATA_SIZE, aad, AAD_SIZE,
+                               key, iv, tag_opt, recovered))
+    {
+        printf("[ERROR] AES-128 GCM accepted a modified tag!\n");
+        return -1;
+    }
+    tag_opt[0] ^= 1;
+
     // 性能对比测试
     uint64_t start = start_rdtsc();
     for (int i = 0; i < TEST_LOOPS; i++)
@@ -122,5 +142,6 @@ int main()
     free(out_openssl);
     free(out_basic);
     free(out_opt);
+    free(recovered);
     return 0;
 }

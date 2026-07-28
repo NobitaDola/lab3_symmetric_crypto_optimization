@@ -1,607 +1,432 @@
-\documentclass[a4paper,12pt]{ctexart} % 使用ctexart类，支持中文
-\usepackage{geometry} % 页边距设置
-\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
-
-\usepackage{fancyhdr} % 页眉页脚设置
-\usepackage{setspace} % 设置行距
-\usepackage{indentfirst} % 首行缩进
-\usepackage{array} % 用于表格格式设置
-\usepackage{titlesec} % 自定义标题格式
-\usepackage{graphicx} % 插入图片
-\usepackage{float}
-\usepackage{listings}
-\usepackage{xcolor}
+% !TeX program = xelatex
+\documentclass[a4paper,12pt]{ctexart}
+\usepackage[left=2.35cm,right=2.35cm,top=2.35cm,bottom=2.35cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{tabularx}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{xurl}
 \usepackage{enumitem}
-\usepackage{tikz}
-\setlist[enumerate]{itemsep=0pt, topsep=0pt, parsep=0pt, partopsep=0pt}
-\setlist[itemize]{itemsep=0pt, topsep=0pt, parsep=0pt, partopsep=0pt}
+\usepackage{amsmath,amssymb}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{caption}
+\graphicspath{{images/}}
+\hypersetup{colorlinks=true,linkcolor=blue!50!black,urlcolor=blue!60!black}
+\setlist{nosep,leftmargin=2em}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}
+\pagestyle{fancy}
+\setlength{\headheight}{15pt}
+\fancyhf{}
+\fancyhead[L]{对称密码算法的软件实现与优化}
+\fancyhead[R]{作业 3}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\definecolor{codebg}{HTML}{F6F8FA}
+\definecolor{codekw}{HTML}{0550AE}
+\definecolor{codecomment}{HTML}{6E7781}
+\lstset{language=C,basicstyle=\ttfamily\small,keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment},backgroundcolor=\color{codebg},frame=single,
+  breaklines=true,columns=fullflexible,showstringspaces=false}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\captionsetup{font=small,labelfont=bf}
 
-
-\pagestyle{fancy} % 页脚页码居中
-\fancyhf{} % 清除所有默认设置
-\renewcommand{\headrulewidth}{0pt} % 删除页眉线
-\fancyfoot[C]{\thepage} % 页脚页码居中
-
-
-% 自定义加粗文字格式（四级标题）
-\newcommand{\subsubsubsection}[1]{%
-    \par\vspace{0.5\baselineskip} % 段前0.5行距
-    \noindent\hspace{1.25em}{\zihao{4}\heiti #1} 
-    \par\vspace{0.5\baselineskip} % 段后0.5行距
-}
-
-% 设置脚注符号为① ② ③ ...
-\renewcommand{\thefootnote}{\textcircled{\arabic{footnote}}}
-
-% ——— 配色（浅色主题，耐阅读） ———
-\definecolor{codebg}{HTML}{FBFBFD}
-\definecolor{frame}{HTML}{E5E7EB}
-\definecolor{lineno}{HTML}{9CA3AF}
-\definecolor{kw}{HTML}{0B5FFF}        % 语言关键字
-\definecolor{builtin}{HTML}{7C3AED}   % 内置/内建对象
-\definecolor{types}{HTML}{0B7A75}     % 类型/寄存器感
-\definecolor{pp}{HTML}{6F42C1}        % 预处理/装饰器前缀
-\definecolor{fnc}{HTML}{C26D0D}       % 常见库函数
-\definecolor{str}{HTML}{22863A}       % 字符串
-\definecolor{cmt}{HTML}{6A737D}       % 注释
-\definecolor{num}{HTML}{D97706}       % 数字/进制前缀
-\definecolor{byte}{HTML}{FF7B72}      % \x?? 前缀（shellcode）
-
-% ——— 通用基础样式 ———
-\lstdefinestyle{codebase}{
-  backgroundcolor=\color{codebg},
-  basicstyle=\ttfamily\small,
-  columns=fullflexible,
-  keepspaces=true,
-  tabsize=4,
-  showstringspaces=false,
-  breaklines=true,
-  frame=single,
-  framerule=0.6pt,
-  rulecolor=\color{frame},
-  numbers=left,
-  numberstyle=\tiny\color{lineno},
-  numbersep=8pt,
-  aboveskip=6pt,
-  belowskip=6pt,
-  keywordstyle=\color{kw}\bfseries,
-    commentstyle=\color{cmt},
-  stringstyle=\color{str},
-  escapeinside={(*@}{@*)}
-}
-
-% ——— 仅支持 Shellcode：高亮 \x 前缀/字节串 ———
-\lstdefinestyle{shellcode}{
-  style=codebase,
-  language=C,
-  morestring=[b]",
-  alsoletter={\\,x},
-  literate=
-    {\\x}{{{\textcolor{byte}{\textbackslash x}}}}2
-    {0x}{{{\textcolor{num}{0x}}}}2
-    {,}{{{\textcolor{lineno}{,}}}}1
-}
-
-% ——— C 语言优化配色 ———
-\lstdefinestyle{c-modern}{
-  style=codebase,
-  language=C,
-  morekeywords=[2]{uint8_t,uint16_t,uint32_t,uint64_t,int8_t,int16_t,int32_t,int64_t,
-                   size_t,ssize_t,uintptr_t,intptr_t,bool,true,false},
-  morekeywords=[3]{NULL,stdin,stdout,stderr},
-  morekeywords=[4]{printf,scanf,memcpy,memmove,memset,strcpy,strncpy,strcat,strncat,strcmp,strncmp,strlen,
-                   fgets,gets,puts,putchar,getchar,sprintf,sscanf,
-                   malloc,calloc,realloc,free,perror,exit,abort,system,execve,
-                   open,close,read,write,fopen,fclose,fread,fwrite,
-                   socket,bind,listen,accept,connect,htons,htonl,ntohs,ntohl},
-  morekeywords=[5]{include,define,undef,if,ifdef,ifndef,else,elif,endif,pragma,error,line},
-  keywordstyle=[2]\color{types}\bfseries,
-  keywordstyle=[3]\color{builtin},
-  keywordstyle=[4]\color{fnc},
-  keywordstyle=[5]\color{pp}\bfseries,
-  literate=
-    {0x}{{{\textcolor{num}{0x}}}}2
-    {->}{{\textcolor{lineno}{->}}}2
-    {\#}{{{\textcolor{pp}{\#}}}}1
-}
-
-% ---------- 汇编语言 (x86-64 NASM) 优化配色 ----------
-\lstdefinelanguage{x86-64-NASM}{
-  morekeywords=[1]{mov, lea, push, pop, add, sub, inc, dec, mul, div, imul, idiv, and, or, xor, not, shl, shr, sal, sar, cmp, test, jmp, je, jne, jz, jnz, jg, jge, jl, jle, ja, jae, jb, jbe, call, ret, syscall, int, nop, leave, enter, xchg, rep, movsb, movsq}, 
-  morekeywords=[2]{rax, rbx, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11, r12, r13, r14, r15, eax, ebx, ecx, edx, esi, edi, ebp, esp, ax, bx, cx, dx, si, di, bp, sp, ah, al, bh, bl, ch, cl, dh, dl, rip}, 
-  morekeywords=[3]{section, global, extern, default, rel, db, dw, dd, dq, resb, resw, resd, resq, equ, times, align}, 
-  morecomment=[l]{;},
-  morestring=[b]",
-  morestring=[b]',
-  sensitive=false
-}
-
-\lstdefinestyle{asm-modern}{
-  style=codebase,
-  language=x86-64-NASM,
-  keywordstyle=[1]\color{kw}\bfseries,
-  keywordstyle=[2]\color{types}\bfseries,
-  keywordstyle=[3]\color{pp}\bfseries,
-  literate=
-    {0x}{{{\textcolor{num}{0x}}}}2
-    {0}{{{\textcolor{num}{0}}}}1
-    {1}{{{\textcolor{num}{1}}}}1
-    {2}{{{\textcolor{num}{2}}}}1
-    {3}{{{\textcolor{num}{3}}}}1
-    {4}{{{\textcolor{num}{4}}}}1
-    {5}{{{\textcolor{num}{5}}}}1
-    {6}{{{\textcolor{num}{6}}}}1
-    {7}{{{\textcolor{num}{7}}}}1
-    {8}{{{\textcolor{num}{8}}}}1
-    {9}{{{\textcolor{num}{9}}}}1
-    {,}{{{\textcolor{lineno}{,}}}}1
-    {:}{{{\textcolor{fnc}{:}}}}1
-}
-
-\ctexset{
-    section = {
-        format+ = \zihao{-2}\heiti\raggedright, 
-        name = {},
-        beforeskip = 0.5\baselineskip,
-        afterskip = 0.5\baselineskip,
-        indent = 0em,
-    },
-    subsection = {
-        format+ = \zihao{3}\heiti,
-        name = {},
-        beforeskip = 0.5\baselineskip,
-        afterskip = 0.5\baselineskip,
-        indent = 0em,
-    },
-    subsubsection = {
-        format+ = \zihao{-3}\heiti,
-        name = {},
-        beforeskip = 0.5\baselineskip,
-        afterskip = 0.5\baselineskip,
-        indent = 0em,
-    },
-}
-
-% 设置正文格式
-\setlength{\parindent}{2em} 
-\setlength{\parskip}{0pt} 
-
-% 设置正文字体为宋体，小四，左右缩进0字符
-\renewcommand{\normalsize}{\fontsize{12pt}{20pt}\selectfont} 
-\setlength{\leftskip}{0pt} 
-\setlength{\rightskip}{0pt} 
-
-% 套用指定模板的页面、标题、页眉页脚、表格与代码样式
-% 如果缺少外部样式文件，则使用安全回退定义，避免编译错误
-\IfFileExists{sdu_report_style.tex}{\input{sdu_report_style.tex}}{%
-    % 回退：定义缺失的颜色和简单样式，保证文档能编译
-    \definecolor{SDUdark}{HTML}{0B5FFF}
-    % 若样式文件提供了更多设置，这里只提供最小替代
-}
-
-% 正文部分
 \begin{document}
-
-% ==================== 封面（严格沿用指定模板结构） ====================
 \begin{titlepage}
 \thispagestyle{empty}
 \begin{center}
-\vspace*{-1.0cm}
-\includegraphics[width=0.60\textwidth]{sdu_logo.jpg}
+\vspace*{-0.7cm}
+\includegraphics[width=0.58\textwidth]{sdu_logo.jpg}
+\vspace{1.0cm}
 
-\vspace{0.25cm}
+{\heiti\zihao{1}\bfseries 对称密码算法的软件实现与优化}\par
+\vspace{0.45cm}
+{\heiti\zihao{2}实验报告}\par
+\vspace{1.35cm}
 
-{\heiti\zihao{1}\bfseries 对称密码算法的软件实现}\\[0.45cm]
-{\heiti\zihao{1}\bfseries 实验报告}\\[0.75cm]
-{\kaishu\zihao{3}\color{SDUdark} 作业 3：对称密码算法的软件实现}
-
-\vspace{1.15cm}
-
-\zihao{4}
-\setlength{\tabcolsep}{0pt}
-\renewcommand{\arraystretch}{1.75}
-\begin{tabular}{@{}r l@{}}
-  \CoverLabel{课程名称} & \CoverFill{网络安全创新创业实践课} \\
-  \CoverLabel{学院} & \CoverFill{网络空间安全学院(研究院)} \\
-  \CoverLabel{负责人姓名} & \CoverFill{王浩博 202322460131} \\
-  \CoverLabel{成员姓名} & \CoverFill{孙增吉 202300460070} \\
-  \CoverLabel{} & \CoverFill{衣洪顺 202322460128} \\
-  \CoverLabel{} & \CoverFill{邓方旭 202300460162} \\
+\renewcommand{\arraystretch}{1.7}
+\begin{tabular}{rl}
+课程名称：& 网络安全创新创业实践课\\
+学院：& 网络空间安全学院（研究院）\\
+负责人：& 王浩博（202322460131）\\
+成员：& 孙增吉（202300460070）\\
+& 衣洪顺（202322460128）\\
+& 邓方旭（202300460162）\\
 \end{tabular}
 
 \vfill
-
-{\zihao{3}\songti 2026年7月27日}
-
-\vspace{0.6cm}
-{\color{SDUred!80}\rule{0.72\textwidth}{1pt}}
+{\zihao{4}2026 年 7 月 28 日}
 \end{center}
 \end{titlepage}
 
-% ==================== 目录 ====================
 \pagenumbering{Roman}
-\pagestyle{reportstyle}
-\begin{spacing}{1.18}
 \tableofcontents
-\end{spacing}
-\thispagestyle{plain}
 \clearpage
 \pagenumbering{arabic}
-\pagestyle{reportstyle}
 
+\section{实验目标与实现范围}
 
-% 实验报告正文部分
-\section{实验概况}
-\subsection{实验内容与要求}
-本实验从基本实现出发，优化对称密码（SM4 / AES / GIFT / TWINE）的软件执行效率。覆盖至少包含 T-table、shuffle 以及最新指令集中的两种方法。此外，基于加解密软件实现，完成 CTR / GCM / XTS 工作模式的软件优化。
+本项目完成 AES、SM4、GIFT、TWINE 四种分组密码的软件实现，并从结构清晰的基础版本出发开展执行效率优化。优化方法覆盖 AES/SM4 T-table、TWINE 多路 shuffle、GIFT bitslice，以及 AES-NI、PCLMULQDQ、BMI2 等处理器指令。在分组密码实现之上，项目进一步完成 CTR、GCM、XTS 三种工作模式的基础版与优化版，并提供加解密、认证、非整块数据和边界条件处理。正确性由公开标准向量、基础版与优化版差分、加解密往返及模式边界测试验证，性能结果通过统一周期计数基准重复测量。
 
-\section{对称密码算法基础与实现优化}
-\subsection{基础算法框架实现}
-本实验选取了 \textbf{AES-128} 和 \textbf{SM4} 作为研究对象，首先完成了两者的基础软件框架实现，作为后续优化和性能验证的基准（Baseline）。
-
-\begin{itemize}
-    \item \textbf{AES-128 基础实现}：严格按照 FIPS 197 标准，状态矩阵使用 16 字节数组表示。加密过程包含 10 轮迭代，每轮依次执行字节代换（SubBytes）、行移位（ShiftRows）、列混淆（MixColumns，最后一轮省略）和轮密钥加（AddRoundKey）。在 GF($2^8$) 有限域乘法中，通过实现 \texttt{xtime} 函数来完成基础的多项式乘法。
-    \item \textbf{SM4 基础实现}：按照 GB/T 32907-2016 标准，采用 32 轮非平衡 Feistel 结构。状态定义为 4 个 32 位无符号整数（\texttt{uint32\_t}）。每轮的核心操作为非线性代换函数 $\tau$（4 个 S 盒查找）与线性变换函数 $L$（循环左移与异或）的组合，即 $T(X) = L(\tau(X))$。
-\end{itemize}
-
-为确保后续优化实现的正确性，基础算法的输出结果均与 OpenSSL 官方库的输出进行了严格的内存比对（\texttt{memcmp}），验证均完全一致。
-
-\subsection{软件执行效率优化方案}
-
-\subsubsection{基于 T-table 的优化方法}
-T-table（查找表）优化的核心思想是“以空间换时间”，通过预计算将多个轮函数操作合并为查表操作，从而消除运行时的复杂计算。
-
-\paragraph{AES 的 T-table 优化}
-在 AES 中，我们将 SubBytes、ShiftRows 和 MixColumns 合并。构造四个大小为 1KB 的查找表 $T_0, T_1, T_2, T_3$。代码中通过 \texttt{aes128\_init\_ttables()} 函数预计算 $S(x)$ 在 GF($2^8$) 下乘 0x01、0x02、0x03 的结果，并组合成 32 位字。在加密主循环中，单轮操作被简化为 16 次查表和 12 次 32 位异或运算：
-\begin{lstlisting}[style=c-modern]
-t0 = T0[s0 >> 24] ^ T1[(s1 >> 16) & 0xff] ^ T2[(s2 >> 8) & 0xff] ^ T3[s3 & 0xff] ^ rk0;
-// t1, t2, t3 同理，通过移位掩码获取对应字节进行查表
-\end{lstlisting}
-
-\paragraph{SM4 的 T-table 优化}
-SM4 的轮函数 $F$ 包含 32 位的输入。我们将 S 盒代换和线性变换 $L$ 结合，预计算出查找表。代码中首先计算 \texttt{T0[i] = sm4\_l\_enc(sbox[i] << 24)}，随后通过循环左移（\texttt{rotl32}）分别生成 \texttt{T1, T2, T3}。这样，每一轮原本需要 4 次 S 盒查表和多次循环左移异或的操作，被等价替换为 4 次 32 位查表和 3 次异或。
-
-\subsubsection{基于 Shuffle (混洗) 的优化方法}
-SM4 算法原生采用大端序（Big-Endian）标准，而现代 x86 处理器普遍采用小端序（Little-Endian）。在基础实现中，频繁的端序转换（如 \texttt{load\_u32\_be}）会带来显著的性能开销。
-
-为了解决这一问题，本实验针对 SM4 引入了基于 SSSE3 指令集的 \textbf{SIMD Shuffle} 优化。利用 \texttt{\_mm\_shuffle\_epi8} 指令，通过预定义的混洗掩码（Mask），在 128 位寄存器内实现单指令周期的端序反转：
-\begin{lstlisting}[style=c-modern]
-// 定义用于端序反转的混洗掩码
-static const uint8_t bswap_mask_data[16] __attribute__((aligned(16))) = {
-    3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12};
-__m128i bswap_mask = _mm_load_si128((const __m128i *)bswap_mask_data);
-
-// 使用 PSHUFB 指令一次性完成 16 字节的端序转换
-state = _mm_shuffle_epi8(state, bswap_mask);
-\end{lstlisting}
-该方法将明文加载与密文存储阶段的端序转换开销降至最低，配合 T-table 使用时，能进一步榨取处理器的执行效率。
-
-\subsubsection{基于 最新指令集 的优化方法}
-为了追求极致性能，本实验利用 Intel 的硬件级加密扩展指令集 \textbf{AES-NI} 对 AES-128 进行了深度优化。AES-NI 在 CPU 硬件电路层面直接实现了 AES 的复杂逻辑，不仅速度极快，还能彻底抵御基于缓存的侧信道攻击（Cache-timing attacks）。
-
-在实现中，引入了 \texttt{<wmmintrin.h>} 头文件，主要使用了以下核心内部函数（Intrinsics）：
-\begin{itemize}
-    \item \texttt{\_mm\_aeskeygenassist\_si128}：用于硬件辅助加速密钥扩展（Key Expansion），大幅减少了生成 11 轮轮密钥的周期数。
-    \item \texttt{\_mm\_aesenc\_si128}：执行完整的单轮 AES 加密操作（包含 SubBytes, ShiftRows, MixColumns, AddRoundKey）。
-    \item \texttt{\_mm\_aesenclast\_si128}：执行 AES 的最后一轮操作（不包含 MixColumns）。
-\end{itemize}
-
-优化后的单分块加密核心逻辑被精简为极其纯粹的硬件指令流：
-\begin{lstlisting}[style=c-modern]
-__m128i m = _mm_loadu_si128((const __m128i *)in);
-m = _mm_xor_si128(m, comp_rk[0]);          // 第 0 轮轮密钥加
-m = _mm_aesenc_si128(m, comp_rk[1]);       // 第 1 轮
-// ... (中间省略 2-8 轮) ...
-m = _mm_aesenc_si128(m, comp_rk[9]);       // 第 9 轮
-m = _mm_aesenclast_si128(m, comp_rk[10]);  // 第 10 轮 (Last)
-_mm_storeu_si128((__m128i *)out, m);
-\end{lstlisting}
-\section{工作模式的软件优化实现}
-\subsection{CTR 工作模式的优化}
-计数器模式（Counter Mode, CTR）将分组密码转化为流密码，其核心优势在于加密和解密过程的结构一致，且不同分组的加密相互独立，没有数据依赖。这一特性使得 CTR 模式天然具备极高的并行潜力。
-
-在本实验中，针对 CTR 模式的软件实现，我们设计了 \textbf{4-Way 并行流水线（4-Way Pipelined Parallelism）} 优化方案：
-\begin{itemize}
-    \item \textbf{状态向量化加载}：利用 SIMD（单指令多数据流）技术，我们预先计算并准备好连续的四个计数器（Counter）状态，将其加载到四个 128 位 \texttt{\_\_m128i} 寄存器中（如代码中的 \texttt{b0, b1, b2, b3}）。
-    \item \textbf{并行轮计算发射}：在每一轮加密中，连续发射四条加密指令。由于现代 CPU（如具有超标量流水线架构的 x86 处理器）的执行单元具有独立的发射端口和延迟槽，连续的四条相互独立的 \texttt{\_mm\_aesenc\_si128} 指令可以完美地填充处理器的指令流水线（Pipeline），打破了单分组加密中的数据依赖延迟（Read-After-Write, RAW 依赖）。
-    \item \textbf{多数据流异或}：获取四个分组的伪随机密钥流（Keystream）后，直接与明文块对应的四个 128 位向量进行 \texttt{\_mm\_xor\_si128} 并行异或，一次性完成 64 字节数据的加密。
-\end{itemize}
-
-除了 AES 结合 AES-NI 指令的 4-Way 优化外，我们同样为 \textbf{SM4 CTR 模式}实现了 4-Way 并行，通过在主循环中一次性计算 4 个分组的 T-table 和 Shuffle 操作，有效分摊了函数调用的控制流开销，提升了指令级别的并行度（ILP）。对于不足 4 个分组的尾部数据（Remainder），则回退到基础的串行加密处理。
-
-\subsection{GCM 工作模式的优化}
-Galois/Counter Mode (GCM) 是一种认证加密（AEAD）模式，结合了 CTR 模式进行数据加密和基于有限域 $GF(2^{128})$ 的 GHASH 算法进行完整性认证。GCM 的性能瓶颈通常不在于 AES 加密（已被 AES-NI 解决），而在于 GHASH 中密集的有限域乘法。
-
-\paragraph{基础 GF($2^{128}$) 乘法}
-在基础实现中，我们采用了标准的“移位与异或（Shift-and-Add）”算法。该方法需要逐比特检查乘数，并对 128 位状态向量进行复杂的按位右移操作，如果发生溢出还需要异或不可约多项式 $R = 0xE100 \dots 00$。这种软件实现的位操作（Bit-twiddling）在通用 CPU 上效率极低。
-
-\paragraph{基于 PCLMULQDQ 指令的无进位乘法优化}
-为了突破 GHASH 的性能瓶颈，本实验引入了 \textbf{PCLMULQDQ 指令集} 进行硬件级优化。PCLMULQDQ（Carry-Less Multiplication Quadword）专为无进位乘法设计，是计算有限域乘法（GF($2^n$)）的理想工具。
-优化策略如下：
-\begin{enumerate}
-    \item \textbf{GHASH 并行化}：在利用 4-Way AES-NI 快速完成 CTR 加密生成密文后，迅速将密文分块送入 GHASH 更新函数。
-    \item \textbf{无进位乘法展开}：利用 \texttt{\_mm\_clmulepi64\_si128} 指令，可以将 128 位操作数拆分为高 64 位和低 64 位，分别进行四次 64x64 位的无进位乘法（High-High, High-Low, Low-High, Low-Low），快速生成 256 位的中间乘积。
-    \item \textbf{快速模约减（Barrett Reduction）}：对 256 位中间结果，无需逐位判断，而是再次使用 PCLMULQDQ 指令乘以预计算的商和多项式因子，通过指令组合在极少数几个时钟周期内完成对 $R$ 的模约减，从而将 GHASH 的计算速度提升了一个数量级。
-\end{enumerate}
-
-
-\subsection{XTS 工作模式的优化}
-XTS（XEX-based tweaked-codebook mode with ciphertext stealing）是目前全盘加密（如 BitLocker, LUKS）的工业标准。它通过引入“扇区号（Sector Number/Tweak）”来确保即使相同的明文块在磁盘的不同位置也会产生不同的密文，有效防范了“水印攻击”和字典攻击。
-
-XTS 模式的核心逻辑为：$C = E_K(P \oplus T) \oplus T$，其中 Tweak 每一块通过乘以域元素 $\alpha$（即有限域上的左移多项式操作）进行更新：$T_{i+1} = T_i \cdot \alpha$。
-
-在本实验的软件优化实现中，我们不仅为 XTS 引入了 4-Way AES-NI 加密，还重点针对 \textbf{Tweak 更新和应用逻辑} 进行了 SIMD 向量化优化：
-\begin{itemize}
-    \item \textbf{域元素乘法向量化（gf128\_mul\_alpha\_vec）}：在基础实现中，Tweak 乘 $\alpha$ 需要处理进位（Carry）的字节间传递。在优化版中，我们设计了 \texttt{gf128\_mul\_alpha\_vec} 函数，利用 \texttt{\_mm\_srli\_epi64} 提取进位位，并使用 \texttt{\_mm\_slli\_si128} (8字节偏移) 和 \texttt{\_mm\_or\_si128} 完成 128 位的全局移位拼接。随后通过 \texttt{\_mm\_extract\_epi8} 提取最高位 MSB，若为 1 则使用向量异或 \texttt{\_mm\_xor\_si128} 操作模多项式掩码 $0x87$。这彻底消除了原有的分支判断（Branching）和字节级循环。
-    \item \textbf{Tweak 预计算与 4-Way 发射}：在进入 4-Way 循环前，使用向量化函数快速推演计算出当前批次的四个连续 Tweak（$T_0, T_1, T_2, T_3$）。
-    \item \textbf{前后端并行异或}：将 64 字节明文分别与四个 Tweak 异或后，发射 4-Way AES-NI 加密，最终密文再次与这四个 Tweak 并行异或，完成整个 XTS 的数据流转换。该优化使其非常契合高性能存储设备的数据吞吐场景。
-\end{itemize}
-
-\section{性能测试与对比分析}
-\subsection{测试环境搭建}
-为了保证性能测试的严谨性与最大化压榨硬件算力，本实验采用了 CMake 构建系统进行统一的编译管理。
-
-\begin{itemize}
-    \item \textbf{编译器优化选项}：在 \texttt{CMakeLists.txt} 中全局开启了 \texttt{-O3} 最高级别优化，以及 \texttt{-march=native} 指令集架构优化。后者极为关键，它允许编译器自动探测并内联当前物理 CPU 所支持的所有高级矢量指令（如 SSSE3、AVX、AES-NI、PCLMULQDQ 等）。
-    \item \textbf{性能度量标准}：使用了 \texttt{x86intrin.h} 提供的 \texttt{rdtsc} 与 \texttt{rdtscp} 指令对 CPU 核心周期（Clock Cycles）进行高精度打点。
-    \item \textbf{测试规模}：基础算法测定以 16 字节（Block）为单位进行 100,000 次循环测试取平均；工作模式（CTR/GCM/XTS）则采用 64KB 的连续内存块进行数千次循环，度量指标统一归一化为 \textbf{Cycles/Byte}（每字节消耗周期数），以平滑系统调度带来的波动误差。
-\end{itemize}
-
-\subsection{执行效率评估与数据对比}
-
-所有优化实现不仅在功能上均完美通过了与 OpenSSL 官方标准库输出的 \texttt{memcmp} 内存比对，在性能上也取得了显著的加速比。以下是详细的数据对比分析：
-
-\subsubsection{AES 基础算法性能评估}
-如图 \ref{fig:aes} 所示，AES-128 的执行效率对比极其悬殊。
-\begin{itemize}
-    \item \textbf{Basic S-Box}：基础实现在处理一个 16 字节分组时消耗了 \textbf{948.25 cycles}。
-    \item \textbf{T-Table Optimization}：引入预计算查表后，消耗周期降至 \textbf{133.33 cycles}，获得了 \textbf{7.11倍} 的加速比。
-    \item \textbf{AES-NI Hardware}：调用硬件指令集后，单分组仅需惊人的 \textbf{5.06 cycles}，达到了基础实现的 \textbf{187.51倍} 加速，充分证明了专用指令集在密码学运算中的绝对统治力。
-\end{itemize}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/aes.png}
-    \caption{AES-128 基础算法性能测试结果}
-    \label{fig:aes}
-\end{figure}
-
-\subsubsection{SM4 基础算法性能评估}
-如图 \ref{fig:sm4} 所示，SM4 算法经过软件优化同样获得了显著提升。
-\begin{itemize}
-    \item \textbf{Basic S-Box}：基础实现单分组耗时 \textbf{624.07 cycles}。
-    \item \textbf{T-Table Optimization}：优化后耗时降至 \textbf{325.23 cycles}，提速 \textbf{1.92倍}。
-    \item \textbf{SIMD Shuffle}：进一步引入 \texttt{\_mm\_shuffle\_epi8} 解决大端序转换开销后，周期数压至 \textbf{310.21 cycles}，总加速比达到 \textbf{2.01倍}。相较于 AES，SM4 在纯软件实现上由于其 32 轮的非平衡 Feistel 结构，难以获得像 AES 那样数倍的 T-Table 提升，但在无专用硬件加速的情况下，2 倍的加速比依然具有工程意义。
-\end{itemize}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/sm4.png}
-    \caption{SM4 基础算法性能测试结果}
-    \label{fig:sm4}
-\end{figure}
-
-\subsubsection{CTR 工作模式性能评估}
-CTR 模式充分展示了流水线并行的威力（见图 \ref{fig:ctr}）。
-\begin{itemize}
-    \item \textbf{AES CTR}：基础串行模式耗时 \textbf{61.33 cycles/byte}；在应用了 4-Way Pipelined 优化后，耗时骤降至 \textbf{1.24 cycles/byte}，加速比高达 \textbf{49.31倍}。这不仅得益于指令级的并行流，更展现了 AES-NI 在连续吞吐情况下的极低延迟。
-    \item \textbf{SM4 CTR}：由于缺乏原生指令集，其串行效率（\textbf{36.85 cycles/byte}）原本优于未硬件加速的 AES。在引入 4-Way 并行后，降低至 \textbf{18.61 cycles/byte}（\textbf{1.98倍} 加速），印证了指令发射端口复用对软件算法同样有效。
-\end{itemize}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/ctr.png}
-    \caption{CTR 模式并行优化测试结果}
-    \label{fig:ctr}
-\end{figure}
-
-\subsubsection{GCM 工作模式性能评估}
-图 \ref{fig:gcm} 展示了 GCM 模式在 64KB 数据及 128B 附加验证数据（AAD）下的表现。基础的 $GF(2^{128})$ 移位异或乘法严重拖累了整体性能（\textbf{207.81 cycles/byte}）。在引入 \textbf{PCLMULQDQ} 无进位乘法指令后，GHASH 阶段的开销大幅缩减，整体效率提升至 \textbf{145.12 cycles/byte}（\textbf{1.43倍} 加速）。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/gcm.png}
-    \caption{GCM 模式与 GHASH 优化测试结果}
-    \label{fig:gcm}
-\end{figure}
-
-\subsubsection{XTS 工作模式性能评估}
-XTS 模式的测试结果（图 \ref{fig:xts}）最为直观地反映了全链路优化的效果。基础串行 XTS 处理数据的速度为 \textbf{63.68 cycles/byte}。在我们将 Tweak 更新（GF域乘 $\alpha$）完全向量化，并与 4-Way AES-NI 加密进行深度交织融合后，其吞吐效率达到了惊人的 \textbf{0.47 cycles/byte}，加速比达到 \textbf{136.06倍}。这一性能指标已经完全足以应对现代 NVMe 固态硬盘（SSD）等极高速存储介质的线速加密需求，且没有引入任何流水线停顿。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.9\linewidth]{images/xts.png}
-    \caption{XTS 模式向量化优化测试结果}
-    \label{fig:xts}
-\end{figure}
-\section{实验总结}
-\subsection{遇到的问题与解决方案}
-在将理论密码学算法转化为高性能软件实现的过程中，我们遇到了多个工程与微架构层面的挑战：
-
-\begin{itemize}
-    \item \textbf{大端序与小端序转换的性能损耗问题}：
-    \textit{问题描述}：SM4 算法标准基于大端序（Big-Endian），而测试环境所在的 x86 架构为小端序（Little-Endian）。在基础实现中，频繁调用 \texttt{load\_u32\_be} 进行字节序转换导致了严重的性能惩罚。
-    \textit{解决方案}：引入了 SSSE3 指令集中的 \texttt{\_mm\_shuffle\_epi8}（PSHUFB）指令。通过预设一个 16 字节的反转掩码（Mask），在 128 位 SIMD 寄存器内部一次性完成全部字节的交叉换位，彻底消除了标量转换的瓶颈。
-
-    \item \textbf{GCM 模式中 GHASH 的有限域乘法延迟}：
-    \textit{问题描述}：在实现 GCM 模式时，AES 加密部分的吞吐量已经被 AES-NI 优化得极高，但 GHASH 认证阶段的 $GF(2^{128})$ 乘法（Shift-and-Add）成为了阻塞整个流水线的短板。
-    \textit{解决方案}：摒弃纯软件位操作，重构为基于 \texttt{PCLMULQDQ} 的无进位乘法。难点在于 256 位结果的模约减（归约到 128 位），我们通过 Barrett Reduction 算法结合多次硬件无进位乘法，实现了完全无分支的极速归约。
-
-    \item \textbf{XTS 模式 Tweak 连续更新的分支预测惩罚}：
-    \textit{问题描述}：XTS 的 Tweak 需要在 $GF(2^{128})$ 下不断乘以 $\alpha$（即左移并处理最高位溢出）。传统的按字节移位及处理进位（Carry）存在大量条件分支，导致 CPU 分支预测器频繁失效。
-    \textit{解决方案}：设计了 \texttt{gf128\_mul\_alpha\_vec} 函数，利用 \texttt{\_mm\_srli\_epi64} 提取进位，利用 \texttt{\_mm\_slli\_si128} 拼接向量，并将最高位溢出条件转换为向量异或掩码（\texttt{0x87}），实现了无分支（Branchless）的常量时间计算，不仅速度快，还增强了抗侧信道攻击的能力。
-\end{itemize}
-
-\subsection{个人与团队收获}
-通过本次实验，我们不仅扎实掌握了对称密码算法及工作模式的底层运行机制，更在工程实践与系统安全认知上获得了质的飞跃。
-
-从高性能后端开发的视角来看，单纯的算法逻辑正确仅仅是工程的起点。通过手写 T-table、设计 4-Way Pipelining 并行流水线、以及深入调用 AES-NI / PCLMULQDQ 等硬件指令集，我们深刻体会到了“数据缓存命中率”、“指令级并行度（ILP）”以及“消除数据依赖”对极致性能的决定性影响。在网络空间安全领域，高效且安全的密码学原语始终是最核心的基石。一次优秀的软件安全实现，必须在安全性（如常量时间执行以防范侧信道攻击）与执行效率之间取得平衡。
-
-在团队协作方面，四人小组分工明确、配合默契。作为项目组长，我（王浩博）主要负责了底层架构的把控与核心硬件指令集的攻坚；孙增吉、衣洪顺和邓方旭等团队成员则分别在多工作模式的并行化（CTR/GCM）、算法查表与混洗优化、以及高精度的 Benchmark 基准测试框架搭建中发挥了不可或缺的作用。大家在代码 Review 和性能瓶颈排查中不断碰撞出思维的火花，极大地提升了团队解决复杂密码学工程问题的能力。
-
-% 参考文献部分
-\Needspace{8\baselineskip}
-\begin{thebibliography}{99} 
-\addcontentsline{toc}{section}{参考文献}
-\zihao{-4} 
-
-\bibitem{ref1} \textit{Recommendation for Block Cipher Modes of Operation}. NIST Special Publication 800-38A (CTR) / 800-38D (GCM) / 800-38E (XTS).
-
-\end{thebibliography}
-\clearpage
-\section*{附录1：团队成员分工}
-\phantomsection
-\addcontentsline{toc}{section}{附录1：团队成员分工}
-
-\rowcolors{2}{SDUlight}{white}
 \begin{table}[H]
 \centering
 \small
-\begin{tabularx}{\textwidth}{|p{2.2cm}|p{3.1cm}|X|}
-\hline
-\rowcolor{SDUred!13}
-\textbf{姓名} & \textbf{学号} & \textbf{分工} \\
-\hline
-王浩博 & 202322460131 & 主要负责人，整体架构设计，核心硬件指令集(AES-NI/PCLMULQDQ)优化，XTS模式向量化，及报告总体统筹 \\
-\hline
-孙增吉 & 202300460070 & CTR与GCM工作模式的4-Way并行流水线优化实现，及GHASH无进位乘法逻辑调试 \\
-\hline
-衣洪顺 & 202322460128 & SM4算法的SIMD Shuffle优化(解决端序问题)，及AES/SM4的T-Table预计算查表优化实现 \\
-\hline
-邓方旭 & 202300460162 & CMake测试环境搭建，Benchmark基准测试框架编写，OpenSSL结果一致性比对及数据收集 \\
-\hline
+\caption{课程要求与最终实现覆盖矩阵}
+\begin{tabularx}{\textwidth}{p{2.7cm}YY}
+\toprule
+要求 & 最终实现 & 验收证据\\
+\midrule
+AES-128 & 基础 S-box、T-table、AES-NI；基础版和硬件版加解密 & FIPS 197 已知答案测试\\
+SM4 & 基础 S-box、T-table、四路交错 T-table、PSHUFB 端序变换、解密 & GB/T 32907-2016 向量\\
+GIFT-128 & 逐半字节基础版、32 位 bitslice、BMI2 PEXT 路径、解密 & 设计者发布的三组向量\\
+TWINE-128 & 标量基础版、八路 SSSE3 PSHUFB、解密 & 原论文附录向量\\
+优化方法 & AES/SM4 T-table；TWINE shuffle；AES-NI、PCLMULQDQ；另含 BMI2 & 指令内建函数、差分测试和性能结果\\
+工作模式 & AES/SM4 CTR、AES-GCM、AES-XTS，均含基础版和优化版 & NIST 向量、错误标签、CTS 与边界测试\\
+\bottomrule
 \end{tabularx}
 \end{table}
 
-\clearpage
-\section*{附录：关键优化代码实现片段}
-\phantomsection
-\addcontentsline{toc}{section}{附录2--5：关键优化代码实现片段}
+需要说明的是，标准 GCM 和 XTS 规定使用 128 位分组密码；TWINE 的分组长度为 64 位，不能直接代入这两种标准构造。因此三种模式以 AES-128 为主要载体，CTR 另外实现 SM4 版本用于比较；这属于模式参数约束，并非漏做算法。
 
-\subsection*{附录 2：AES-128 基于 AES-NI 指令集的单块加密展开}
-利用专用硬件内部函数实现极低延迟的 AES 轮函数处理：
-\begin{lstlisting}[style=c-modern]
-#include <wmmintrin.h>
+\section{实验环境与方法}
 
-void aes128_encrypt_ni(const uint8_t *in, uint8_t *out, const __m128i *comp_rk) {
-    // 将明文加载到 128 位寄存器
-    __m128i m = _mm_loadu_si128((const __m128i *)in);
-    
-    // 初始轮密钥加
-    m = _mm_xor_si128(m, comp_rk[0]);
-    
-    // 展开第 1 到 9 轮的 AES 硬件指令加密
-    m = _mm_aesenc_si128(m, comp_rk[1]);
-    m = _mm_aesenc_si128(m, comp_rk[2]);
-    m = _mm_aesenc_si128(m, comp_rk[3]);
-    m = _mm_aesenc_si128(m, comp_rk[4]);
-    m = _mm_aesenc_si128(m, comp_rk[5]);
-    m = _mm_aesenc_si128(m, comp_rk[6]);
-    m = _mm_aesenc_si128(m, comp_rk[7]);
-    m = _mm_aesenc_si128(m, comp_rk[8]);
-    m = _mm_aesenc_si128(m, comp_rk[9]);
-    
-    // 第 10 轮不执行 MixColumns
-    m = _mm_aesenclast_si128(m, comp_rk[10]);
-    
-    // 存储密文结果
-    _mm_storeu_si128((__m128i *)out, m);
-}
+\subsection{软硬件环境}
+
+\begin{table}[H]
+\centering
+\caption{实验平台}
+\begin{tabularx}{0.92\textwidth}{p{4.0cm}Y}
+\toprule
+项目 & 配置\\
+\midrule
+处理器 & AMD Ryzen 9 7940H with Radeon 780M Graphics\\
+处理器标识 & AMD64 Family 25 Model 116 Stepping 1\\
+操作系统 & Windows 11，内核版本 10.0.22631，x86-64\\
+编译器 & MinGW-w64 GCC 8.1.0\\
+构建类型 & CMake Release，核心优化参数 \texttt{-O3}\\
+指令参数 & \texttt{-maes -mpclmul -mssse3 -msse4.1 -mbmi2}\\
+计时方法 & 序列化 \texttt{RDTSC/RDTSCP}，单块 $10^5$ 次；模式每次 64 KiB、重复 50 次\\
+统计方法 & 完整基准独立运行 5 轮，各项分别取中位数\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{实验变量与公平性控制}
+
+同一对比中的基础版与优化版使用完全相同的密钥、明文、数据长度与计时函数，计时区间不包含动态内存申请。单块算法以 cycles/block 衡量；模式以 cycles/byte 衡量，以消除数据长度差异。TWINE 优化结果是八路总周期除以 8，表示吞吐而不是单请求延迟。由于 CPU 睿频、调度和缓存状态会产生抖动，报告不选取最小值，而采用五轮中位数；全部性能测试只在正确性测试通过后执行。
+
+\subsection{测试层次}
+
+第一层是已知答案测试（KAT），验证公开密钥、明文与密文；第二层要求基础版、查表版、指令版产生逐字节一致输出；第三层验证解密往返；第四层覆盖 GCM 篡改拒绝、XTS 非整块与原地操作等安全边界。对于最容易因位序出错的 GHASH，额外生成 1000 组伪随机输入，将 PCLMULQDQ 结果与可读的逐位实现比较。
+
+\section{AES-128 的基础实现与优化}
+
+\subsection{算法结构与基础版}
+
+AES-128 的状态为 $4\times4$ 字节矩阵，使用 128 位密钥和 10 轮变换。初始轮仅执行 AddRoundKey，中间九轮执行 SubBytes、ShiftRows、MixColumns 与 AddRoundKey，末轮省略 MixColumns。基础版把四个变换分别写成独立步骤，S 盒索引、行位移和 $GF(2^8)$ 列混合与规范直接对应，因此适合作为其他版本的正确性参考。解密实现对应的 InvShiftRows、InvSubBytes、InvMixColumns，并逆序使用轮密钥。
+
+\subsection{T-table 优化}
+
+中间轮中，SubBytes、ShiftRows 与 MixColumns 可以组合成四张各 256 项的 32 位表 $T_0\sim T_3$。每个新状态字只需四次查表、三次异或和轮密钥异或：
+\[
+s'_0=T_0[b_0]\oplus T_1[b_5]\oplus T_2[b_{10}]\oplus T_3[b_{15}]\oplus rk_0.
+\]
+该方法显著减少有限域乘法和逐字节操作，但表索引依赖秘密状态，存在缓存计时侧信道。在本实验中它用于展示经典软件优化，不建议直接作为生产环境默认实现。
+
+\subsection{AES-NI 指令实现}
+
+AES-NI 版使用 \texttt{AESENC/AESENCLAST} 把一轮的字节代换、行移位、列混合与轮密钥加合并为专用指令。密钥扩展使用 \texttt{AESKEYGENASSIST}；解密轮密钥通过 \texttt{AESIMC} 变换，再调用 \texttt{AESDEC/AESDECLAST}。其优势不仅是指令数少，也是不再产生由秘密索引驱动的 T-table 访存。
+
+\begin{lstlisting}
+state = _mm_xor_si128(state, round_keys[0]);
+for (int r = 1; r < 10; ++r)
+    state = _mm_aesenc_si128(state, round_keys[r]);
+state = _mm_aesenclast_si128(state, round_keys[10]);
 \end{lstlisting}
 
-\Needspace{14\baselineskip}
-\subsection*{附录 3：SM4 算法基于 SSSE3 的 SIMD Shuffle 端序转换}
-利用 \texttt{\_mm\_shuffle\_epi8} 掩码指令一次性解决 16 字节大端到小端的转换性能瓶颈：
-\begin{lstlisting}[style=c-modern]
-#include <immintrin.h>
+\subsection{AES 标准向量}
 
-void sm4_encrypt_shuffle(const uint8_t *in, uint8_t *out, const uint32_t *rk) {
-    // 1. 加载数据并定义端序反转掩码
-    __m128i state = _mm_loadu_si128((const __m128i *)in);
-    static const uint8_t bswap_mask_data[16] __attribute__((aligned(16))) = {
-        3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12
-    };
-    __m128i bswap_mask = _mm_load_si128((const __m128i *)bswap_mask_data);
-    
-    // 单指令完成 128 位数据的 Endianness Reversal
-    state = _mm_shuffle_epi8(state, bswap_mask);
+FIPS 197 测试使用密钥 \texttt{000102...0f} 和明文 \texttt{001122...eeff}，期望密文为：
+\begin{center}
+\texttt{69c4e0d86a7b0430d8cdb78070b4c55a}
+\end{center}
+基础加密、T-table、AES-NI、基础解密和 AES-NI 解密均通过该向量。
 
-    // 将向量拆分为 4 个 uint32_t 状态输入到 T-table 计算逻辑
-    uint32_t x0 = (uint32_t)_mm_cvtsi128_si32(state);
-    uint32_t x1 = (uint32_t)_mm_extract_epi32(state, 1);
-    uint32_t x2 = (uint32_t)_mm_extract_epi32(state, 2);
-    uint32_t x3 = (uint32_t)_mm_extract_epi32(state, 3);
-    
-    // ... [T-table 查表与异或计算逻辑省略] ...
-    
-    // 3. 计算结果还原为大端序并写回内存
-    __m128i res = _mm_set_epi32((int)x0, (int)x1, (int)x2, (int)x3);
-    res = _mm_shuffle_epi8(res, bswap_mask);
-    _mm_storeu_si128((__m128i *)out, res);
-}
+\section{SM4 的基础实现与优化}
+
+\subsection{基础轮函数}
+
+SM4 使用 128 位分组、128 位密钥和 32 轮非平衡 Feistel 结构。第 $i$ 轮为
+\[
+X_{i+4}=X_i\oplus L\!\left(\tau(X_{i+1}\oplus X_{i+2}\oplus X_{i+3}\oplus rk_i)\right),
+\]
+其中 $\tau$ 是四个并行 8 位 S 盒，$L(B)=B\oplus(B\lll2)\oplus(B\lll10)\oplus(B\lll18)\oplus(B\lll24)$。解密无需新的轮函数，只需逆序使用 32 个轮密钥。
+
+\subsection{T-table 与四路交错}
+
+SM4 T-table 把每个字节位置的 S 盒输出与线性变换 $L$ 合并为四张 32 位表。单次轮变换变成四次查表与异或。由于单个 SM4 分组存在 32 轮严格依赖，CTR 优化中同时推进四个独立计数器状态，使处理器可以交错调度来自不同分组的查表链，增加指令级并行度。\texttt{PSHUFB} 在该实现中用于输入输出的大端字节序重排；真正的多路 4 位 S 盒 shuffle 则由后续 TWINE 实现完成。
+
+\subsection{SM4 标准向量}
+
+GB/T 32907-2016 向量令密钥和明文均为 \texttt{0123456789abcdeffedcba9876543210}，期望密文为 \texttt{681edf34d206965e86b3e94f536e4246}。基础版、T-table、单块 shuffle 包装、四路 T-table 及解密均通过。
+
+\section{GIFT-128 的基础实现与 bitslice 优化}
+
+\subsection{基础实现}
+
+GIFT-128 是 40 轮轻量级 SPN，分组和密钥均为 128 位。基础版将状态表示为 32 个 4 位半字节，每轮依次执行 SubCells、PermBits 与 AddRoundKey。该布局直观但逐位置换循环开销很高，主要作用是与规范逐步核对，并为 bitslice 版本提供可信参照。解密按逆序执行轮密钥加、逆置换和逆 S 盒。
+
+\subsection{32 位 bitslice 与 BMI2}
+
+优化版把 32 个 S 盒的同一位收集到四个 \texttt{uint32\_t} 位平面中。S 盒被改写为与、或、异或和取反组成的布尔网络，因此一组标量逻辑指令同时更新 32 个 S 盒：
+\begin{lstlisting}
+s1 ^= s0 & s2;
+s0 ^= s1 & s3;
+s2 ^= s0 | s1;
+s3 ^= s2; s1 ^= s3; s3 = ~s3;
+s2 ^= s0 & s1;
+swap(s0, s3);
+\end{lstlisting}
+在启用 BMI2 时，\texttt{PEXT} 从固定间隔位置汇聚位组，加速状态打包与置换；未启用 BMI2 时保留逐位可移植回退。该实现没有秘密相关的查表索引。
+
+\subsection{向量覆盖}
+
+测试采用设计者发布的三组 GIFT-128 向量，包括全零输入、重复 \texttt{fedcba9876543210} 输入及非结构化输入。三组期望密文分别以 \texttt{cd0bd738...}、\texttt{8422241a...}、\texttt{13ede67c...} 开头。基础版、bitslice 与解密全部逐字节一致。
+
+\section{TWINE-128 的基础实现与 shuffle 优化}
+
+TWINE-128 使用 64 位分组、128 位密钥和 36 轮 16 分支广义 Feistel 结构。基础版以 16 个半字节保存状态：每轮偶数分支经 S 盒和轮密钥作用后异或到相邻奇数分支，再执行论文给出的半字节置换 $\pi$。解密使用同一 S 盒、逆置换和逆序轮密钥。
+
+单分组版本有较长的轮依赖链。优化版同时维护八个分组，每个 SIMD 寄存器承载八个分组的对应半字节；\texttt{PSHUFB} 以 16 字节查找向量并行完成 4 位 S 盒，再用另一组固定掩码完成半字节重排。它既摊薄装载开销，又产生足够的并行状态隐藏轮依赖。论文向量密钥 \texttt{001122...eeff}、明文 \texttt{0123456789abcdef} 的期望密文为 \texttt{979ff9b379b5a9b8}，标量、shuffle 与解密均通过。
+
+\section{CTR、GCM 与 XTS 工作模式}
+
+\subsection{CTR：计数器并行}
+
+CTR 对连续计数器分组加密并与输入异或：
+\[
+C_i=P_i\oplus E_K(\mathrm{CTR}_0+i).
+\]
+因此加密与解密是同一函数，分组之间也不存在依赖。实现支持任意字节长度，尾部不足一块时只使用密钥流前缀。AES 优化版同时推进四个 AES-NI 状态；SM4 版交错四个 T-table 状态。安全前提是在同一密钥下绝不复用初始计数器，而且 CTR 本身不提供完整性。
+
+\subsection{GCM：AES-NI CTR 与 PCLMULQDQ GHASH}
+
+GCM 将 CTR 保密性与 GHASH 认证结合。基础 GHASH 按 NIST SP 800-38D 位序逐位实现 $GF(2^{128})$ 乘法。优化版先调整位/字节表示，再用四次 \texttt{PCLMULQDQ} 组合 256 位无进位乘积，并按
+\[
+p(x)=x^{128}+x^7+x^2+x+1
+\]
+折叠高 128 位完成约减。最终代码确实执行专用无进位乘法指令，具体内建函数调用见下方代码。
+
+\begin{lstlisting}
+z0 = _mm_clmulepi64_si128(x, y, 0x00);
+z1 = _mm_xor_si128(_mm_clmulepi64_si128(x, y, 0x01),
+                   _mm_clmulepi64_si128(x, y, 0x10));
+z2 = _mm_clmulepi64_si128(x, y, 0x11);
+/* combine 256-bit product, then reduce modulo x^128+x^7+x^2+x+1 */
 \end{lstlisting}
 
-\Needspace{14\baselineskip}
-\subsection*{附录 4：CTR 模式下 AES-NI 4-Way 并行流水线核心逻辑}
-通过同时发射 4 组不相关的状态，打破读写依赖（RAW），填满处理器流水线：
-\begin{lstlisting}[style=c-modern]
-// (位于 aes128_ctr_encrypt_parallel 的循环内部)
+认证解密根据 AAD 与密文重新计算 128 位标签并以常量时间比较；标签失败返回 0，并清空输出缓冲区，防止未认证明文被上层误用。
 
-// 将 4 个连续递增的 Counter 状态加载到寄存器
-__m128i b0 = _mm_loadu_si128((const __m128i *)c0);
-__m128i b1 = _mm_loadu_si128((const __m128i *)c1);
-__m128i b2 = _mm_loadu_si128((const __m128i *)c2);
-__m128i b3 = _mm_loadu_si128((const __m128i *)c3);
+\subsection{XTS：四路 AES-NI 与 ciphertext stealing}
 
-// 初始轮密钥加 (4 路并发)
-b0 = _mm_xor_si128(b0, rk[0]);
-b1 = _mm_xor_si128(b1, rk[0]);
-b2 = _mm_xor_si128(b2, rk[0]);
-b3 = _mm_xor_si128(b3, rk[0]);
+XTS 使用两个独立 AES-128 子密钥。第二个密钥产生初始 tweak，之后在 $GF(2^{128})$ 中连续乘 $\alpha$；每块执行
+\[
+C_i=E_{K_1}(P_i\oplus T_i)\oplus T_i.
+\]
+优化版预计算四个连续 tweak，并交错执行四路 AES-NI。对非 16 字节倍数的数据单元，按 IEEE 1619 实现 ciphertext stealing：最后完整块的临时密文前缀成为短密文，短明文与临时密文剩余部分重组后使用下一 tweak 加密。测试覆盖 17、31、47、79 字节；小于一个完整块时明确失败。加密和解密均支持输入输出缓冲区相同。
 
-// 并行执行 1-9 轮 AES 加密指令
-for (int r = 1; r < 10; r++) {
-    b0 = _mm_aesenc_si128(b0, rk[r]);
-    b1 = _mm_aesenc_si128(b1, rk[r]);
-    b2 = _mm_aesenc_si128(b2, rk[r]);
-    b3 = _mm_aesenc_si128(b3, rk[r]);
-}
+\section{正确性实验与运行结果}
 
-// 并行执行第 10 轮
-b0 = _mm_aesenclast_si128(b0, rk[10]);
-b1 = _mm_aesenclast_si128(b1, rk[10]);
-b2 = _mm_aesenclast_si128(b2, rk[10]);
-b3 = _mm_aesenclast_si128(b3, rk[10]);
+\subsection{四种分组密码的已知答案测试}
 
-// 将 4 路伪随机密钥流与明文块并行异或，写出 64 字节密文
-// ... (异或处理逻辑)
+\texttt{test\_block\_vectors} 覆盖 AES 和 SM4 的基础、T-table、硬件/多路与解密路径。图~\ref{fig:block-kat} 给出了分组密码已知答案测试的实际运行输出。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{experiment_block_vectors.png}
+\caption{AES-128 与 SM4 标准向量运行结果}
+\label{fig:block-kat}
+\end{figure}
+
+\texttt{test\_lightweight} 对 GIFT 的三组公开向量和 TWINE 的论文向量分别验证基础加密、优化加密和解密，同时输出一次轻量级算法的即时性能对比。图~\ref{fig:light-kat} 中两个优化结果均约为基础版的 28 倍，且向量测试全部成功。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{experiment_lightweight_vectors.png}
+\caption{GIFT-128 与 TWINE-128 向量及优化等价性结果}
+\label{fig:light-kat}
+\end{figure}
+
+\subsection{工作模式、认证与边界测试}
+
+模式测试不仅检查“能否往返”，还使用 NIST 已知密文。AES-CTR 使用 SP 800-38A 的 64 字节向量；GCM 的全零密钥/IV/明文向量期望密文 \texttt{0388dace...fe78}、标签 \texttt{ab6e47d4...bddf}。PCLMUL 有限域乘法另与基础版随机差分 1000 次。GCM 标签翻转一位必须失败并清零输出。XTS 检查 16、17、31、32、47、64、79 字节，包含 31 字节外部 CTS 向量及原地加解密。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{experiment_modes_vectors.png}
+\caption{CTR、GCM/PCLMUL 与 XTS/CTS 测试结果}
+\label{fig:modes-kat}
+\end{figure}
+
+\begin{longtable}{p{3.6cm}p{4.4cm}p{6.4cm}}
+\caption{自动测试的关键断言}\label{tab:assertions}\\
+\toprule
+测试程序 & 对象 & 关键断言\\
+\midrule
+\endfirsthead
+\toprule
+测试程序 & 对象 & 关键断言\\
+\midrule
+\endhead
+分组向量测试 & AES、SM4 & 所有实现等于标准密文；解密恢复原文；SM4 四路均一致\\
+轻量密码测试 & GIFT、TWINE & 公开向量；基础/优化等价；解密恢复；八路输出一致\\
+模式向量测试 & CTR & NIST 64 字节密文；优化版等价；再次 CTR 恢复原文\\
+同上 & GCM/GHASH & NIST 密文与标签；1000 组 GF 差分；坏标签拒绝且清零\\
+同上 & XTS & 多长度、CTS 外部向量、基础/优化、加解密和原地往返\\
+\bottomrule
+\end{longtable}
+
+\section{性能实验结果与分析}
+
+\subsection{五轮原始测量与中位数}
+
+完整基准连续独立运行五轮。每轮包含五项分组算法对比和四项模式对比；原始输出保存于 \path{report/results/performance_raw_5runs.txt}，中位数统计保存于 \path{performance_median.txt}。图~\ref{fig:bench-terminal} 给出五轮中位数的运行输出，表~\ref{tab:performance} 给出相同数据。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{experiment_benchmark_median.png}
+\caption{综合性能实验五轮中位数}
+\label{fig:bench-terminal}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\small
+\caption{最终代码性能实验中位数}
+\label{tab:performance}
+\begin{tabular}{lrrr}
+\toprule
+项目 & 基础版 & 优化版 & 加速比\\
+\midrule
+AES T-table（cycles/block） & 2031.39 & 144.26 & 14.08x\\
+AES AES-NI（cycles/block） & 2031.39 & 5.65 & 359.54x\\
+SM4 T-table（cycles/block） & 428.69 & 278.76 & 1.54x\\
+GIFT-128 bitslice（cycles/block） & 34415.62 & 1205.42 & 28.55x\\
+TWINE 八路 shuffle（cycles/block） & 2653.65 & 92.13 & 28.80x\\
+AES-CTR（cycles/byte） & 134.30 & 1.30 & 103.31x\\
+SM4-CTR（cycles/byte） & 30.00 & 10.80 & 2.78x\\
+AES-GCM（cycles/byte） & 294.57 & 6.20 & 47.51x\\
+AES-XTS（cycles/byte） & 136.11 & 0.45 & 302.47x\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{分组算法对比}
+
+图~\ref{fig:block-perf} 使用对数横轴同时展示数量级差异。AES T-table 把多个轮操作合并后获得 14.08 倍加速，但 AES-NI 降至 5.65 cycles/block，说明专用硬件轮指令远优于通用查表。SM4 T-table 只有 1.54 倍，原因是基础版已经较紧凑，且 32 轮数据依赖与查表访存限制了收益。GIFT 基础版故意逐位执行可读置换，bitslice 同时处理 32 个 S 盒，因此有 28.55 倍提升。TWINE 的 28.80 倍是八路吞吐结果，来源既包括 PSHUFB S 盒/置换，也包括多分组并行隐藏轮依赖。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{performance_block_ciphers.png}
+\caption{四种分组密码基础版与优化版性能（五轮中位数，对数轴）}
+\label{fig:block-perf}
+\end{figure}
+
+\subsection{工作模式对比}
+
+图~\ref{fig:mode-perf} 表明模式加速不仅由底层单块性能决定，也取决于并行结构。CTR 分组独立，四路 AES-NI 可充分并行，达到 103.31 倍；SM4 缺少本机专用轮指令，只靠四路交错和 T-table，因此为 2.78 倍。GCM 基础版的逐位 GHASH 极慢，PCLMULQDQ 消除主要瓶颈后达到 47.51 倍。XTS 的长数据单元允许四路 AES-NI 与 tweak 预计算充分摊薄固定开销，测得 302.47 倍；该数字描述 64 KiB 吞吐，不等同于短数据单元延迟。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{performance_modes.png}
+\caption{CTR、GCM、XTS 基础版与优化版性能（五轮中位数，对数轴）}
+\label{fig:mode-perf}
+\end{figure}
+
+\subsection{波动与可信度讨论}
+
+五轮中大多数优化值较稳定，例如 AES-NI 为 5.57--5.72 cycles/block，GCM 优化版为 6.12--6.23 cycles/byte。AES T-table 某轮出现 219.85 cycles/block，高于其余轮次，可能受缓存或系统调度影响，采用中位数 144.26 避免该异常值主导结论。XTS 优化值集中在 0.44--0.46 cycles/byte，其极高加速比同时反映“基础版逐块软件 AES”和“大缓冲四路 AES-NI”的差距。实验没有声称这些周期数可跨机器复用；可复现的是测试步骤、相对趋势与最终代码路径。
+
+\section{安全性、局限与工程改进}
+
+T-table 的访存地址依赖秘密状态，可能受到缓存侧信道攻击；它适合课程中的经典优化对比，不适合作为高安全场景默认路径。AES-NI、GIFT bitslice 和 TWINE 固定 PSHUFB 的查找/逻辑路径不使用秘密内存地址，侧信道性质更好，但本实验没有进行功耗、电磁或严格常量时间工具审计。
+
+GCM 的 nonce 在同一密钥下必须唯一；标签必须在释放明文前验证。CTR 同样禁止计数器初值复用。XTS 只提供存储扇区保密性而不提供完整性，两个子密钥必须独立。当前二进制在构建时选择 AES-NI、PCLMULQDQ、SSSE3 和 BMI2；若作为可分发软件，还应增加 CPUID 运行时分派、密钥材料清零、长度上限检查、错误码体系和更多平台持续集成。
+
+\section{结论}
+
+本实验完整实现 AES、SM4、GIFT、TWINE 四种指定算法。优化技术覆盖 T-table、shuffle、AES-NI、PCLMULQDQ 与 BMI2，工作模式覆盖 CTR、GCM 和 XTS。项目同时实现 GIFT/TWINE 加解密、GCM 认证失败处理、XTS CTS 和系统化自动测试。公开向量、差分和边界测试全部通过；五轮性能中位数显示 AES-NI、bitslice、八路 shuffle 与 PCLMULQDQ 均带来可观加速，而 SM4 T-table 的收益相对有限。表格、性能图和运行输出均与最终源码及实验日志对应，实验结论具备可复核性。
+
+\appendix
+\section{构建、运行与结果复现}
+
+\begin{lstlisting}[language={}]
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure
+
+build/test_block_vectors.exe
+build/test_lightweight.exe
+build/test_modes_vectors.exe
+build/benchmark_all.exe
 \end{lstlisting}
 
-\Needspace{14\baselineskip}
-\subsection*{附录 5：XTS 模式中 Tweak 的无分支向量化更新}
-避免传统实现中按字节位移和进位判定引起的分支预测失败，增强安全性和吞吐：
-\begin{lstlisting}[style=c-modern]
-// SSE 128 位下执行 GF(2^128) 乘以多项式 x (alpha) 的计算
-static inline __m128i gf128_mul_alpha_vec(__m128i t) {
-    // 提取全局最高位 MSB（第127位）决定是否执行模运算
-    int msb = _mm_extract_epi8(t, 15) >> 7; 
+若目标机器没有 BMI2，可在配置阶段使用 \texttt{-DCRYPTO\_HW3\_NATIVE=OFF}，GIFT 自动使用可移植打包回退。OpenSSL 为可选差分测试依赖；不存在时三个独立向量测试仍可构建和运行。
 
-    // 处理 128 位整体左移的进位逻辑
-    __m128i carry = _mm_srli_epi64(t, 63);
-    carry = _mm_slli_si128(carry, 8);
-    t = _mm_slli_epi64(t, 1);
-    t = _mm_or_si128(t, carry);
+\section{源码与实验材料索引}
 
-    // 如果最高位溢出，无分支执行多项式模约减 (掩码 0x87)
-    if (msb) {
-        static const uint8_t poly_mask[16] __attribute__((aligned(16))) = {
-            0x87, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        };
-        t = _mm_xor_si128(t, _mm_load_si128((const __m128i *)poly_mask));
-    }
-    return t;
-}
-\end{lstlisting}
+\begin{longtable}{p{5.0cm}p{9.0cm}}
+\toprule
+文件 & 内容\\
+\midrule
+\endfirsthead
+\toprule
+文件 & 内容\\
+\midrule
+\endhead
+\texttt{src/aes.c}、\texttt{include/aes.h} & AES 基础、T-table、AES-NI 及加解密\\
+\texttt{src/sm4.c}、\texttt{include/sm4.h} & SM4 基础、T-table、shuffle 包装、四路与解密\\
+\texttt{src/gift128.c} & GIFT 基础、bitslice、BMI2 和解密\\
+\texttt{src/twine.c} & TWINE 基础、PSHUFB 八路与解密\\
+\texttt{src/modes.c} & CTR、GCM、GHASH/PCLMUL、XTS/CTS\\
+\texttt{tests/test\_*.c} & 标准向量、差分、错误标签与边界测试\\
+\texttt{tests/benchmark\_all.c} & 统一周期计数性能基准\\
+\shortstack[l]{\texttt{performance\_raw}\\\texttt{\_5runs.txt}} & \texttt{report/results} 中保存的五轮原始性能输出\\
+\texttt{experiment\_*.png} & \texttt{report/images} 中保存的正确性实验运行记录\\
+\texttt{performance\_*.png} & \texttt{report/images} 中保存的性能分析图\\
+\bottomrule
+\end{longtable}
+
+\section*{参考资料}
+\addcontentsline{toc}{section}{参考资料}
+\begin{enumerate}
+  \item NIST, FIPS 197: Advanced Encryption Standard, \url{https://csrc.nist.gov/pubs/fips/197/final}.
+  \item 国家标准 GB/T 32907-2016，信息安全技术 SM4 分组密码算法.
+  \item GIFT 设计者主页与参考实现，\url{https://giftcipher.github.io/gift/}.
+  \item T. Suzaki et al., TWINE: A Lightweight Block Cipher for Multiple Platforms, \url{https://www.nec.com/en/global/rd/tg/code/symenc/pdf/twine_LC11.pdf}.
+  \item NIST SP 800-38A: Recommendation for Block Cipher Modes of Operation.
+  \item NIST SP 800-38D: Galois/Counter Mode (GCM) and GMAC.
+  \item NIST SP 800-38E: Recommendation for Block Cipher Modes of Operation: XTS-AES.
+  \item IEEE Std 1619, Cryptographic Protection of Data on Block-Oriented Storage Devices.
+\end{enumerate}
+
+\section*{团队分工}
+\addcontentsline{toc}{section}{团队分工}
+\begin{tabular}{p{4.0cm}p{10.3cm}}
+\toprule
+成员 & 主要工作\\
+\midrule
+王浩博（202322460131） & 总体架构、AES-NI/PCLMULQDQ、XTS、报告统筹\\
+孙增吉（202300460070） & CTR/GCM 并行化、GHASH 和模式测试\\
+衣洪顺（202322460128） & T-table、shuffle、轻量级密码优化\\
+邓方旭（202300460162） & CMake/CTest、差分测试、基准与数据复核\\
+\bottomrule
+\end{tabular}
+
 \end{document}

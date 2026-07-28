@@ -1,5 +1,6 @@
 # CMake and native build output
 /build/
+/tmp/
 /cmake-build-*/
 CMakeCache.txt
 CMakeFiles/
